@@ -1,3 +1,6 @@
+import { loadHeaderFooter } from "./utils.mjs";
+loadHeaderFooter();
+
 import { renderListWithTemplate } from "./utils.mjs";
 
 // plantilla de cada tarjeta de producto

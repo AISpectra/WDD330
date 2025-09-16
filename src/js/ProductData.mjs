@@ -1,3 +1,6 @@
+import { loadHeaderFooter } from "./utils.mjs";
+loadHeaderFooter();
+
 function convertToJson(res) {
   if (res.ok) {
     return res.json();
