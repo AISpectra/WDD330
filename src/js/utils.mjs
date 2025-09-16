@@ -75,7 +75,10 @@ export async function loadHeaderFooter() {
   const headerEl = qs("#site-header");
   const footerEl = qs("#site-footer");
 
-  renderWithTemplate(headerHTML, headerEl, null, updateCartCount); // callback para contador
+  renderWithTemplate(headerHTML, headerEl, null, (root) => {
+    updateCartCount(root);
+    wireSearch(root);           // <— aquí
+  });
   renderWithTemplate(footerHTML, footerEl);
 }
 
@@ -87,3 +90,14 @@ export function getParam(param) {
   return params.get(param);
 }
 
+function wireSearch(root) {
+  const form = root.querySelector('#search-form');
+  if (!form) return;
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const term = new FormData(form).get('q')?.trim();
+    if (!term) return;
+    // redirigir a la página de listado con ?q=
+    window.location.href = `/product_listing/index.html?q=${encodeURIComponent(term)}`;
+  });
+}
