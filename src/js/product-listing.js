@@ -11,16 +11,33 @@ import ProductList from "./ProductList.mjs";
     console.error("Header/Footer load failed:", err);
   }
 
-  const category = getParam("category") || "tents";
+  const query = getParam("q");              // búsqueda (?q=term)
+  const category = getParam("category");   // categoría (?category=tents)
 
-  // título dinámico
   const titleEl = qs("#listing-title");
-  if (titleEl) titleEl.textContent = `Top Products: ${category.replace("-", " ")}`;
-
-  const dataSource = new ProductData(); // sin categoría
+  const dataSource = new ProductData();
   const listElement = document.querySelector(".product-list");
 
-  const myList = new ProductList(category, dataSource, listElement);
-  myList.init();
+  if (query) {
+    // 🔎 modo búsqueda
+    if (titleEl) titleEl.textContent = `Search results for: "${query}"`;
+
+    try {
+      const results = await dataSource.search(query);
+      const myList = new ProductList("search", dataSource, listElement);
+      myList.renderList(results); // renderizamos directamente resultados
+    } catch (err) {
+      console.error("Search failed:", err);
+      listElement.innerHTML = `<li>No results found for "${query}"</li>`;
+    }
+  } else {
+    // 📂 modo categoría (default: tents)
+    const cat = category || "tents";
+    if (titleEl) titleEl.textContent = `Top Products: ${cat.replace("-", " ")}`;
+
+    const myList = new ProductList(cat, dataSource, listElement);
+    myList.init();
+  }
 })();
+
 

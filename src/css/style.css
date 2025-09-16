@@ -309,3 +309,20 @@ footer {
   font-size: .95rem;
   text-align: center;
 }
+
+
+
+/* en /css/style.css */
+.site-search {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+}
+.site-search input[type="search"] {
+  min-width: 16ch;
+  padding: .4rem .6rem;
+}
+.site-search button {
+  padding: .45rem .7rem;
+  cursor: pointer;
+}
