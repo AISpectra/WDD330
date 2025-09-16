@@ -8,17 +8,7 @@
   </head>
 
   <body>
-    <header class="divider">
-      <div class="logo">
-        <img src="/images/noun_Tent_2517.svg" alt="tent image for logo" />
-        <a href="index.html"> Sleep<span class="highlight">Outside</span></a>
-      </div>
-      <div class="cart">
-        <a href="cart/index.html">
-          <!-- (icono SVG igual que lo tienes) -->
-        </a>
-      </div>
-    </header>
+    <header id="site-header"></header>
 
     <main class="divider">
       <div class="hero">
@@ -39,6 +29,29 @@
         </div>
       </div>
 
+      <section class="categories">
+        <h2>Shop by Category</h2>
+        <ul class="category-list">
+          <li><a href="/product_listing/index.html?category=tents">
+            <img src="/images/icons/tents.png" alt="Tents" />
+            <span>Tents</span>
+          </a></li>
+          <li><a href="/product_listing/index.html?category=backpacks">
+            <img src="/images/icons/backpacks.png" alt="Backpacks" />
+            <span>Backpacks</span>
+          </a></li>
+          <li><a href="/product_listing/index.html?category=sleeping-bags">
+            <img src="/images/icons/sleeping-bags.png" alt="Sleeping Bags" />
+            <span>Sleeping Bags</span>
+          </a></li>
+          <li><a href="/product_listing/index.html?category=hammocks">
+            <img src="/images/icons/hammocks.png" alt="Hammocks" />
+            <span>Hammocks</span>
+          </a></li>
+        </ul>
+      </section>
+
+
       <section class="products">
         <h2>Top Products</h2>
         <!-- 🔹 Vacío. JS insertará las cards aquí -->
@@ -46,10 +59,7 @@
       </section>
     </main>
 
-    <footer>
-      &copy;2025 ⛺ SleepOutside ⛺ WDD 330 ⛺ BYU-Idaho for BYU-Pathway
-      Worldwide Online
-    </footer>
+    <footer id="site-footer"></footer>
 
     <!-- 🔹 Script que renderiza la lista dinámica -->
     <script type="module" src="/js/main.js"></script>

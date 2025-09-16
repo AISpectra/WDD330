@@ -1,4 +1,7 @@
+import { loadHeaderFooter } from "./utils.mjs";
 import { renderListWithTemplate } from "./utils.mjs";
+
+loadHeaderFooter();
 
 // plantilla de cada tarjeta de producto
 function productCardTemplate(product) {
@@ -8,8 +11,8 @@ function productCardTemplate(product) {
       ? product.Brand
       : (product.Brand?.Name || product.Brand?.BrandName || "");
 
-  // Imagen: fuerza ruta absoluta
-  const img = product.Image?.startsWith("/") ? product.Image : `/${product.Image}`;
+  // Imagen: usa campo de la API
+  const img = product.Images?.PrimaryMedium || "/images/no-image.png";
 
   // Precio: formatea si es número
   const price =
@@ -30,15 +33,22 @@ function productCardTemplate(product) {
 
 export default class ProductList {
   constructor(category, dataSource, listElement) {
-    this.category = category;       // "tents"
+    this.category = category;       // "tents", "backpacks", etc.
     this.dataSource = dataSource;   // instancia de ProductData
     this.listElement = listElement; // <ul class="product-list">
     this.list = [];
   }
 
   async init() {
-    this.list = await this.dataSource.getData();
+    // 👇 ahora pasamos la categoría al método
+    this.list = await this.dataSource.getData(this.category);
     this.renderList(this.list);
+
+    // Cambia también el título dinámicamente
+    const title = document.querySelector("h2");
+    if (title) {
+      title.textContent = `Top Products: ${this.category}`;
+    }
   }
 
   renderList(list) {

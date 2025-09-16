@@ -1,24 +1,60 @@
-import { getLocalStorage, setLocalStorage } from "./utils.mjs";
+// product.js
+import { loadHeaderFooter, getParam, getLocalStorage, setLocalStorage } from "./utils.mjs";
 import ProductData from "./ProductData.mjs";
 
-// fuente de datos (tents.json)
-const dataSource = new ProductData("tents");
+loadHeaderFooter();
 
-// leer el id desde la URL
-const params = new URLSearchParams(window.location.search);
-const productId = params.get("id");
+// 👉 la nueva clase ProductData YA NO recibe categoría.
+//    (usa el baseURL de .env y pide por id cuando hace falta)
+const dataSource = new ProductData();
 
-// contenedor donde vamos a mostrar el detalle
+// lee el id desde la URL. Aceptamos ?product=... o ?id=...
+const productId = getParam("product") || getParam("id");
+
+// contenedor del detalle
 const productContainer = document.querySelector("#product-detail");
 
+// utilidades de formateo y extracción
+function formatPrice(value) {
+  if (typeof value === "number") return value.toFixed(2);
+  const n = Number(value);
+  return Number.isFinite(n) ? n.toFixed(2) : value ?? "";
+}
+
+function getBrand(product) {
+  return (
+    product?.Brand?.Name ||
+    product?.Brand?.BrandName ||
+    product?.Brand ||
+    ""
+  );
+}
+
+function getImage(product) {
+  // Con el API nuevo suele venir PrimaryLarge para detalle.
+  // Dejamos fallbacks por si acaso.
+  return (
+    product?.PrimaryLarge ||
+    product?.PrimaryMedium ||
+    product?.Image ||
+    product?.Images?.PrimaryLarge ||
+    product?.Images?.Primary?.Large ||
+    "" // último recurso
+  );
+}
+
 function productTemplate(product) {
+  const img = getImage(product);
+  const brand = getBrand(product);
+  const price = formatPrice(product?.FinalPrice ?? product?.ListPrice);
+
   return `
     <article class="product">
-      <img src="${product.Image}" alt="${product.Name}">
-      <h1>${product.Name}</h1>
-      <p class="brand">${product.Brand ?? ""}</p>
-      <p class="price">$${product.FinalPrice}</p>
-      <button id="addToCart" data-id="${product.Id}">Add to Cart</button>
+      ${img ? `<img src="${img}" alt="${product?.Name ?? ""}">` : ""}
+      <h1>${product?.Name ?? ""}</h1>
+      ${brand ? `<p class="brand">${brand}</p>` : ""}
+      ${price ? `<p class="price">$${price}</p>` : ""}
+      <button id="addToCart" data-id="${product?.Id}">Add to Cart</button>
     </article>`;
 }
 
@@ -29,18 +65,43 @@ function addProductToCart(product) {
 }
 
 async function addToCartHandler(e) {
-  const product = await dataSource.findProductById(e.target.dataset.id);
-  addProductToCart(product);
+  try {
+    const id = e.target.dataset.id;
+    if (!id) return;
+    const product = await dataSource.findProductById(id);
+    if (!product) return;
+    addProductToCart(product);
+    // (opcional) feedback rápido al usuario
+    e.target.textContent = "Added!";
+    setTimeout(() => (e.target.textContent = "Add to Cart"), 800);
+  } catch (err) {
+    console.error("Add to cart failed:", err);
+  }
 }
 
 async function init() {
-  const product = await dataSource.findProductById(productId);
-  productContainer.innerHTML = productTemplate(product);
+  try {
+    if (!productId) {
+      productContainer.innerHTML = `<p>Missing product id.</p>`;
+      return;
+    }
 
-  // ahora que ya está en el DOM el botón, agregamos el listener
-  document
-    .getElementById("addToCart")
-    .addEventListener("click", addToCartHandler);
+    const product = await dataSource.findProductById(productId);
+    if (!product) {
+      productContainer.innerHTML = `<p>Product not found.</p>`;
+      return;
+    }
+
+    productContainer.innerHTML = productTemplate(product);
+
+    // listener del botón (ya existe tras render)
+    document
+      .getElementById("addToCart")
+      .addEventListener("click", addToCartHandler);
+  } catch (err) {
+    console.error(err);
+    productContainer.innerHTML = `<p>There was a problem loading the product.</p>`;
+  }
 }
 
 init();

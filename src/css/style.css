@@ -261,3 +261,51 @@ footer {
   font-size: var(--small-font);
   padding: 1em;
 }
+
+
+/* Grid limpio para las categorías */
+.category-list{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+/* Tarjeta de categoría */
+.category-list a{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  text-decoration: none;
+  color: inherit;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 1rem;
+  padding: 1rem;
+  transition: transform .15s ease, box-shadow .15s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+
+.category-list a:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.08);
+}
+
+/* ► MISMO TAMAÑO PARA TODAS LAS IMÁGENES */
+.category-list img{
+  width: 84px;        /* ajusta el tamaño a tu gusto */
+  height: 84px;       /* cuadrado uniforme */
+  object-fit: contain;/* mantiene la proporción del icono */
+  display: block;
+}
+
+/* Texto debajo del icono */
+.category-list span{
+  font-weight: 600;
+  font-size: .95rem;
+  text-align: center;
+}
