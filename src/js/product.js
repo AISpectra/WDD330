@@ -1,6 +1,6 @@
 // product.js
 import { loadHeaderFooter, getParam, getLocalStorage, setLocalStorage } from "./utils.mjs";
-import ProductData from "./ProductData.mjs";
+import ProductData from "./ExternalServices.mjs";
 
 loadHeaderFooter();
 

@@ -1,4 +1,4 @@
-// src/js/ProductData.mjs
+// src/js/ExternalServices.mjs
 const baseURL = import.meta.env.VITE_SERVER_URL; // viene de tu .env
 
 function convertToJson(res) {
@@ -6,9 +6,9 @@ function convertToJson(res) {
   throw new Error(`Bad Response: ${res.status} ${res.statusText}`);
 }
 
-export default class ProductData {
+export default class ExternalServices {
   constructor() {
-    // Ya no guardamos category ni path. Con la API no hacen falta.
+    // No guardamos categoría; todo se pide dinámicamente
   }
 
   // Obtiene productos por categoría
@@ -17,7 +17,6 @@ export default class ProductData {
       `${baseURL}products/search/${encodeURIComponent(category)}`
     );
     const data = await convertToJson(response);
-    // La API devuelve { Result: [...] }
     return data.Result;
   }
 
@@ -27,13 +26,11 @@ export default class ProductData {
       `${baseURL}product/${encodeURIComponent(id)}`
     );
     const data = await convertToJson(response);
-    // La API devuelve { Result: {...} } o el objeto directo
     return data.Result ?? data;
   }
 
-  // 🔎 NUEVO: búsqueda por término
+  // 🔎 Búsqueda por término
   async search(term) {
-    // 1) Intentamos endpoint de búsqueda global (si existe)
     try {
       const res = await fetch(
         `${baseURL}products/search?q=${encodeURIComponent(term)}`
@@ -41,11 +38,10 @@ export default class ProductData {
       const data = await convertToJson(res);
       const result = data.Result ?? [];
       if (Array.isArray(result) && result.length) return result;
-    } catch (e) {
-      // ignoramos si falla y seguimos al fallback
+    } catch (_) {
+      // fallback
     }
 
-    // 2) Fallback: descargar todas las categorías y filtrar en cliente
     const cats = ["tents", "backpacks", "sleeping-bags", "hammocks"];
     const all = [];
     for (const c of cats) {
@@ -53,9 +49,7 @@ export default class ProductData {
         const res = await fetch(`${baseURL}products/search/${c}`);
         const data = await convertToJson(res);
         all.push(...(data.Result ?? []));
-      } catch (_) {
-        // si falla una categoría la ignoramos
-      }
+      } catch (_) {}
     }
 
     const q = term.toLowerCase();
@@ -65,5 +59,17 @@ export default class ProductData {
         (p.Brand?.Name ?? p.Brand ?? "").toLowerCase().includes(q)
     );
   }
-}
 
+  // 🛒 Enviar orden al backend
+  async checkout(orderPayload) {
+    const url = `${baseURL}checkout`;
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderPayload),
+    };
+    const resp = await fetch(url, options);
+    if (!resp.ok) throw new Error(`Checkout failed: ${resp.status}`);
+    return await resp.json();
+  }
+}

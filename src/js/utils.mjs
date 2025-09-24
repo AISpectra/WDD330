@@ -37,6 +37,21 @@ export function renderListWithTemplate(
 }
 
 /* ============================================
+   NUEVO: helpers genéricos para formularios/moneda
+   ============================================ */
+// Convierte un <form> en un objeto plano { name: value, ... }
+export function formDataToJSON(formElement) {
+  const fd = new FormData(formElement);
+  return Object.fromEntries(fd.entries());
+}
+
+// Formatea un número como $0.00
+export function formatCurrency(value) {
+  const n = Number(value) || 0;
+  return `$${n.toFixed(2)}`;
+}
+
+/* ============================================
    NUEVO: helpers para header/footer dinámicos
    ============================================ */
 
@@ -77,7 +92,7 @@ export async function loadHeaderFooter() {
 
   renderWithTemplate(headerHTML, headerEl, null, (root) => {
     updateCartCount(root);
-    wireSearch(root);           // <— aquí
+    wireSearch(root);
   });
   renderWithTemplate(footerHTML, footerEl);
 }
