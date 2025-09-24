@@ -1,6 +1,6 @@
 // src/js/product-listing.js
 import { loadHeaderFooter, getParam, qs } from "./utils.mjs";
-import ProductData from "./ProductData.mjs";
+import ProductData from "./ExternalServices.mjs";
 import ProductList from "./ProductList.mjs";
 
 (async function init() {

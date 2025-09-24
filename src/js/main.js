@@ -1,7 +1,7 @@
 import { loadHeaderFooter } from "./utils.mjs";
 loadHeaderFooter();
 
-import ProductData from "./ProductData.mjs";
+import ProductData from "./ExternalServices.mjs";
 import ProductList from "./ProductList.mjs";
 
 // fuente de datos (tents.json)

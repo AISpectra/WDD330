@@ -326,3 +326,14 @@ footer {
   padding: .45rem .7rem;
   cursor: pointer;
 }
+
+
+
+
+.cart-card { display: grid; grid-template-columns: 100px 1fr auto; gap: 1rem; align-items: center; }
+.cart-card__image img { width: 100px; height: 100px; object-fit: contain; }
+.cart-card__qty { display: inline-flex; gap: .5rem; align-items: center; }
+.qty-btn { width: 2rem; height: 2rem; line-height: 2rem; text-align: center; }
+.qty-input { width: 3.5rem; text-align: center; }
+.remove-btn { margin-left: .5rem; }
+.cart-card__prices { text-align: right; }

@@ -10,16 +10,79 @@
   <body>
     <header id="site-header" class="divider"></header>
 
-    <main class="divider">
-      <section class="products">
-        <h2>Review &amp; Place your Order</h2>
+    <main class="divider checkout-grid">
+      <!-- Order Summary -->
+      <section class="order-summary">
+        <h2>Order Summary</h2>
+        <ul class="summary-lines">
+          <li><span>Items</span> <span id="summary-count">0</span></li>
+          <li><span>Subtotal</span> <span id="summary-subtotal">$0.00</span></li>
+          <li><span>Tax (6%)</span> <span id="summary-tax">$0.00</span></li>
+          <li><span>Shipping</span> <span id="summary-shipping">$0.00</span></li>
+          <li class="total"><span>Total</span> <span id="summary-total">$0.00</span></li>
+        </ul>
+        <p class="hint">Shipping: $10 first item + $2 each additional</p>
+      </section>
+
+      <!-- Checkout Form -->
+      <section class="checkout-form">
+        <h2>Billing & Payment</h2>
+        <form id="checkout-form" novalidate>
+          <fieldset>
+            <legend>Customer</legend>
+            <div class="row">
+              <label>First Name
+                <input name="fname" required />
+              </label>
+              <label>Last Name
+                <input name="lname" required />
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Address</legend>
+            <label>Street Address
+              <input name="street" required />
+            </label>
+            <div class="row">
+              <label>City
+                <input name="city" required />
+              </label>
+              <label>State
+                <input name="state" maxlength="2" required />
+              </label>
+              <label>Zip Code
+                <input name="zip" id="zip" inputmode="numeric" required />
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Payment</legend>
+            <label>Credit Card Number
+              <input name="cardNumber" inputmode="numeric" minlength="16" maxlength="16" required value="1234123412341234"/>
+            </label>
+            <div class="row">
+              <label>Expiration (MM/YY)
+                <input name="expiration" placeholder="08/28" required />
+              </label>
+              <label>Security Code
+                <input name="code" inputmode="numeric" minlength="3" maxlength="3" required value="123"/>
+              </label>
+            </div>
+          </fieldset>
+
+          <button type="submit" class="primary">Place Order</button>
+        </form>
+
+        <p id="checkout-message" class="status" aria-live="polite"></p>
       </section>
     </main>
 
     <footer id="site-footer"></footer>
 
-    <!-- Si tienes lógica de checkout, descomenta esto:
     <script type="module" src="/js/checkout.js"></script>
-    -->
   </body>
 </html>
+
