@@ -3,7 +3,7 @@ import { getLocalStorage, qs } from "./utils.mjs";
 import ExternalServices from "./ExternalServices.mjs";
 
 function toMoney(n) {
-  return `$${Number(n).toFixed(2)}`;
+  return `$${(Number(n) || 0).toFixed(2)}`;
 }
 
 export default class CheckoutProcess {
@@ -11,7 +11,7 @@ export default class CheckoutProcess {
     this.cart = getLocalStorage("so-cart") || [];
     this.services = new ExternalServices();
 
-    // referencias a la UI
+    // Referencias UI
     this.ui = {
       count: qs("#summary-count"),
       subtotal: qs("#summary-subtotal"),
@@ -23,7 +23,7 @@ export default class CheckoutProcess {
       msg: qs("#checkout-message"),
     };
 
-    // totales
+    // Totales
     this.subtotal = 0;
     this.tax = 0;
     this.shipping = 0;
@@ -33,7 +33,7 @@ export default class CheckoutProcess {
   init() {
     // 1) calcular subtotal al cargar
     this.calcItemSubtotal();
-    // 2) estimar tax + shipping + total (puedes recalcular al cambiar zip si quieres)
+    // 2) calcular tax + shipping + total
     this.recalculateTotals();
 
     // 3) listeners
@@ -45,13 +45,17 @@ export default class CheckoutProcess {
     }
   }
 
-  // Subtotal de líneas (asumimos qty=1 por ítem en el cart)
+  // Subtotal de líneas (qty=1 por ítem salvo que venga quantity)
   calcItemSubtotal() {
-    this.subtotal = this.cart.reduce(
-      (sum, item) => sum + Number(item?.FinalPrice ?? 0) * Number(item?.quantity ?? 1),
-      0
-    );
-    // pintar parcial
+    this.subtotal = this.cart.reduce((sum, item) => {
+      const unit =
+        Number(item?.FinalPrice) ||
+        Number(item?.price) ||
+        0;
+      const qty = Number(item?.quantity ?? 1);
+      return sum + unit * qty;
+    }, 0);
+
     if (this.ui.count) this.ui.count.textContent = this.cart.length;
     if (this.ui.subtotal) this.ui.subtotal.textContent = toMoney(this.subtotal);
   }
@@ -68,7 +72,7 @@ export default class CheckoutProcess {
     if (this.ui.total) this.ui.total.textContent = toMoney(this.total);
   }
 
-  // Convierte formData -> objeto
+  // Convierte formData -> objeto plano
   formDataToJSON(form) {
     return Object.fromEntries(new FormData(form).entries());
   }
@@ -76,9 +80,9 @@ export default class CheckoutProcess {
   // Empaqueta items al formato del backend
   packageItems(items) {
     return items.map((p) => ({
-      id: p.Id,
-      name: p.Name,
-      price: Number(p.FinalPrice),
+      id: p.Id ?? p.id,
+      name: p.Name ?? p.name ?? "",
+      price: Number(p.FinalPrice ?? p.price ?? 0),
       quantity: Number(p.quantity ?? 1),
     }));
   }
@@ -88,15 +92,18 @@ export default class CheckoutProcess {
     this.clearMessage();
 
     const form = this.ui.form;
+    if (!form) return;
+
+    // Validación nativa
     if (!form.checkValidity()) {
-      this.showMessage("Please fill out all required fields.", "error");
-      // lleva el foco al primer inválido
+      form.reportValidity?.();
       const firstInvalid = form.querySelector(":invalid");
       if (firstInvalid) firstInvalid.focus();
+      this.showMessage("Please fill out all required fields.", "error");
       return;
     }
 
-    // construir payload
+    // Construir payload
     const data = this.formDataToJSON(form);
     const orderPayload = {
       orderDate: new Date().toISOString(),
@@ -111,24 +118,27 @@ export default class CheckoutProcess {
       code: data.code,
       items: this.packageItems(this.cart),
       orderTotal: this.total.toFixed(2),
-      shipping: this.shipping,
+      shipping: Number(this.shipping),
       tax: this.tax.toFixed(2),
     };
 
-    // bloquear botón mientras se envía
     const submitBtn = form.querySelector('[type="submit"]');
     if (submitBtn) submitBtn.disabled = true;
 
     try {
-      const resp = await this.services.checkout(orderPayload);
-      this.showMessage("Order placed successfully ✅", "success");
-      // vaciar carrito si quieres:
+      await this.services.checkout(orderPayload);
+      // Éxito: limpiar carrito y redirigir
       localStorage.removeItem("so-cart");
-      // podrías redirigir a una página de confirmación
-      // window.location.href = "/checkout/confirmation.html";
+      window.location.href = "/checkout/success.html";
     } catch (err) {
-      console.error(err);
-      this.showMessage("There was a problem submitting your order. Please try again.", "error");
+      // err.message puede ser string u objeto (si viene del backend)
+      console.error("Checkout failed:", err);
+      const friendly =
+        (typeof err?.message === "string" && err.message) ||
+        err?.message?.message ||
+        err?.message?.errors ||
+        "There was a problem submitting your order. Please try again.";
+      this.showMessage(friendly, "error");
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }

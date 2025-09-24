@@ -1,17 +1,28 @@
 // src/js/ExternalServices.mjs
-const baseURL = import.meta.env.VITE_SERVER_URL; // viene de tu .env
+const baseURL = import.meta.env.VITE_SERVER_URL; // from .env
 
-function convertToJson(res) {
-  if (res.ok) return res.json();
-  throw new Error(`Bad Response: ${res.status} ${res.statusText}`);
+// Parse body always; if not ok, throw a rich error object with the server JSON
+export async function convertToJson(res) {
+  const text = await res.text(); // read body even on 4xx
+  let json = {};
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch {
+    json = { message: text || "Unknown error" };
+  }
+
+  if (res.ok) return json;
+
+  // Propagate details so UI can show specific messages (e.g., "Invalid Card Number")
+  throw {
+    name: "servicesError",
+    status: res.status,
+    message: json, // often { errors: [...] } or { message: "..." }
+  };
 }
 
 export default class ExternalServices {
-  constructor() {
-    // No guardamos categoría; todo se pide dinámicamente
-  }
-
-  // Obtiene productos por categoría
+  // Productos por categoría
   async getData(category) {
     const response = await fetch(
       `${baseURL}products/search/${encodeURIComponent(category)}`
@@ -20,16 +31,14 @@ export default class ExternalServices {
     return data.Result;
   }
 
-  // Obtiene detalle por Id
+  // Detalle por Id
   async findProductById(id) {
-    const response = await fetch(
-      `${baseURL}product/${encodeURIComponent(id)}`
-    );
+    const response = await fetch(`${baseURL}product/${encodeURIComponent(id)}`);
     const data = await convertToJson(response);
     return data.Result ?? data;
   }
 
-  // 🔎 Búsqueda por término
+  // 🔎 Búsqueda por término (intenta endpoint global y si no, fallback por categorías)
   async search(term) {
     try {
       const res = await fetch(
@@ -38,8 +47,8 @@ export default class ExternalServices {
       const data = await convertToJson(res);
       const result = data.Result ?? [];
       if (Array.isArray(result) && result.length) return result;
-    } catch (_) {
-      // fallback
+    } catch {
+      // fallback below
     }
 
     const cats = ["tents", "backpacks", "sleeping-bags", "hammocks"];
@@ -49,7 +58,9 @@ export default class ExternalServices {
         const res = await fetch(`${baseURL}products/search/${c}`);
         const data = await convertToJson(res);
         all.push(...(data.Result ?? []));
-      } catch (_) {}
+      } catch {
+        // ignore category failures
+      }
     }
 
     const q = term.toLowerCase();
@@ -60,7 +71,7 @@ export default class ExternalServices {
     );
   }
 
-  // 🛒 Enviar orden al backend
+  // 🛒 Enviar orden al backend (POST) y devolver la respuesta o lanzar error con detalles
   async checkout(orderPayload) {
     const url = `${baseURL}checkout`;
     const options = {
@@ -68,8 +79,8 @@ export default class ExternalServices {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(orderPayload),
     };
-    const resp = await fetch(url, options);
-    if (!resp.ok) throw new Error(`Checkout failed: ${resp.status}`);
-    return await resp.json();
+    const res = await fetch(url, options);
+    return convertToJson(res); // success => JSON; error => throws { name, status, message }
   }
 }
+
